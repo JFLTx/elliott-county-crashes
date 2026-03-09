@@ -485,6 +485,21 @@ body {
   background: #ffff99;
 }
 
+.kabco-count {
+  margin-left: auto;
+  color: #555;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.kabco-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+  width: 100%;
+}
+
 .maplibregl-popup {
   max-width: 315px !important;
 }
@@ -638,6 +653,52 @@ body {
 
 .maphelp_btn:hover {
   background: whitesmokefffcc;
+}
+
+/* download control styles  */
+.mapdownload-ctrl {
+  /* inherits MapLibre control group box */
+}
+
+.mapdownload_btn_ctrl {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #111;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.mapdownload_btn_ctrl:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.mapdownload_btn_ctrl:active {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+.mapdownload_btn_ctrl svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+}
+
+.mapdownload_btn_ctrl svg path {
+  fill: none;
+  stroke: #111;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Small devices (portrait phones, 576px and below) */

@@ -52,6 +52,7 @@ const hideHeat = 13.75;
 
 // global state
 let currentTimeIndex = -1; // -1 = all crashes
+let allCrashFeatures = [];
 
 function parseCollisionTime(value) {
   if (value === null || value === undefined) return null;
@@ -111,6 +112,41 @@ function getKabcoItem(id) {
   return kabcoItems.find((d) => d.id === id);
 }
 
+function getFilteredFeatures() {
+  return allCrashFeatures.filter((feature) => {
+    const props = feature.properties || {};
+    const kabcoItem = getKabcoItem(props.KABCO);
+
+    if (!kabcoItem || !kabcoItem.visible) return false;
+
+    if (currentTimeIndex === -1) return true;
+
+    const t = Number(props.CollisionTimeNum);
+    if (Number.isNaN(t)) return false;
+
+    const [minTime, maxTime] = timeGroups[currentTimeIndex].range;
+    return t >= minTime && t <= maxTime;
+  });
+}
+
+function updateCounts() {
+  const features = getFilteredFeatures();
+
+  kabcoItems.forEach((item) => {
+    const count = features.filter(
+      (feature) => feature.properties?.KABCO === item.id,
+    ).length;
+
+    const countEl = document.querySelector(
+      `.kabco-count[data-kabco="${item.id}"]`,
+    );
+
+    if (countEl) {
+      countEl.textContent = `(${count.toLocaleString()})`;
+    }
+  });
+}
+
 function buildLegend() {
   if (document.querySelector("#kabco-legend-panel")) return;
 
@@ -140,6 +176,7 @@ function buildLegend() {
         background:${item.color};
       "></span>
       <span class="kabco-legend-label">${item.label}</span>
+      <span class="kabco-count" data-kabco="${item.id}">(0)</span>
     `;
 
     panel.appendChild(row);
@@ -291,6 +328,7 @@ function filterBy() {
   }
 
   updateViz();
+  updateCounts();
 }
 
 function updateViz() {
@@ -328,6 +366,8 @@ map.on("load", async () => {
         CollisionTimeNum: parseCollisionTime(d.CollisionTime),
       },
     }));
+
+  allCrashFeatures = features;
 
   const geojson = {
     type: "FeatureCollection",
@@ -1030,6 +1070,48 @@ class HelpControl {
   }
 }
 
+// download option to view crash data
+class DownloadControl {
+  onAdd(map) {
+    this._map = map;
+
+    const c = document.createElement("div");
+    c.className = "maplibregl-ctrl maplibregl-ctrl-group mapdownload-ctrl";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "mapdownload_btn_ctrl";
+    btn.setAttribute("aria-label", "Download crash data");
+    btn.setAttribute("title", "Download crash data");
+
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v9"></path>
+        <path d="M8.5 10.5 12 14l3.5-3.5"></path>
+        <path d="M5 18.5h14"></path>
+      </svg>
+    `;
+
+    btn.addEventListener("click", () => {
+      const link = document.createElement("a");
+      link.href = "./data/crashes.csv";
+      link.download = "crashes.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    });
+
+    c.appendChild(btn);
+    this._container = c;
+    return c;
+  }
+
+  onRemove() {
+    this._container?.remove();
+    this._map = undefined;
+  }
+}
+
 document.addEventListener("click", (e) => {
   const panel = document.querySelector("#kabco-legend-panel");
   const legendBtn = document.querySelector(".maplegend_btn_ctrl");
@@ -1066,5 +1148,5 @@ map.addControl(
 );
 
 map.addControl(new LegendControl(), "top-right"); // legend control
-
 map.addControl(new HelpControl(), "top-right"); // adds new helper control button
+map.addControl(new DownloadControl(), "top-right"); // download button for users to view crashes on their own
