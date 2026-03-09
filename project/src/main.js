@@ -313,7 +313,7 @@ const map = new maplibregl.Map({
 });
 
 map.on("load", async () => {
-  const rows = await d3.csv("/data/crashes.csv");
+  const rows = await d3.csv("./data/crashes.csv");
 
   const features = rows
     .filter((d) => !isNaN(Number(d.Longitude)) && !isNaN(Number(d.Latitude)))
