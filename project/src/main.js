@@ -53,6 +53,7 @@ const hideHeat = 13.75;
 // global state
 let currentTimeIndex = -1; // -1 = all crashes
 let allCrashFeatures = [];
+let currentManner = "All";
 
 function parseCollisionTime(value) {
   if (value === null || value === undefined) return null;
@@ -119,6 +120,11 @@ function getFilteredFeatures() {
 
     if (!kabcoItem || !kabcoItem.visible) return false;
 
+    if (currentManner !== "All") {
+      const manner = props.MannerofCollision?.trim() || "";
+      if (manner !== currentManner) return false;
+    }
+
     if (currentTimeIndex === -1) return true;
 
     const t = Number(props.CollisionTimeNum);
@@ -127,6 +133,22 @@ function getFilteredFeatures() {
     const [minTime, maxTime] = timeGroups[currentTimeIndex].range;
     return t >= minTime && t <= maxTime;
   });
+}
+
+function getMannerFilter() {
+  if (!currentManner || currentManner === "All") return null;
+  return ["==", ["get", "MannerofCollision"], currentManner];
+}
+
+function getUniqueMannerValues() {
+  const values = new Set();
+
+  allCrashFeatures.forEach((feature) => {
+    const val = feature.properties?.MannerofCollision?.trim();
+    if (val) values.add(val);
+  });
+
+  return Array.from(values).sort((a, b) => a.localeCompare(b));
 }
 
 function updateCounts() {
@@ -194,6 +216,46 @@ function buildLegend() {
     });
   });
 
+  const filterTitle = document.createElement("div");
+  filterTitle.className = "kabco-legend-subtitle";
+  filterTitle.textContent = "Additional Filters";
+  panel.appendChild(filterTitle);
+
+  const mannerWrap = document.createElement("div");
+  mannerWrap.className = "kabco-filter-group";
+
+  const mannerLabel = document.createElement("label");
+  mannerLabel.className = "kabco-filter-label";
+  mannerLabel.textContent = "Manner of Collision";
+  mannerLabel.setAttribute("for", "manner-filter");
+
+  const mannerSelect = document.createElement("select");
+  mannerSelect.id = "manner-filter";
+  mannerSelect.className = "kabco-filter-select";
+
+  const allOption = document.createElement("option");
+  allOption.value = "All";
+  allOption.textContent = "All Collisions";
+  mannerSelect.appendChild(allOption);
+
+  getUniqueMannerValues().forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    mannerSelect.appendChild(option);
+  });
+
+  mannerSelect.value = currentManner;
+
+  mannerSelect.addEventListener("change", (e) => {
+    currentManner = e.target.value;
+    filterBy();
+  });
+
+  mannerWrap.appendChild(mannerLabel);
+  mannerWrap.appendChild(mannerSelect);
+  panel.appendChild(mannerWrap);
+
   document.body.appendChild(panel);
 }
 
@@ -208,14 +270,15 @@ function getKabcoVisibilityFilter(kabcoId) {
 }
 
 function getCombinedFilter(kabcoId) {
-  const visibilityFilter = getKabcoVisibilityFilter(kabcoId);
+  const filters = [getKabcoVisibilityFilter(kabcoId)];
+
   const timeFilter = getTimeFilter();
+  if (timeFilter) filters.push(timeFilter);
 
-  if (timeFilter) {
-    return ["all", visibilityFilter, timeFilter];
-  }
+  const mannerFilter = getMannerFilter();
+  if (mannerFilter) filters.push(mannerFilter);
 
-  return visibilityFilter;
+  return filters.length === 1 ? filters[0] : ["all", ...filters];
 }
 
 function getHeatKabcoFilter() {
@@ -317,13 +380,15 @@ function filterBy() {
   });
 
   if (map.getLayer("crashes-heat")) {
+    const filters = [getHeatKabcoFilter()];
+
     const timeFilter = getTimeFilter();
-    const kabcoFilter = getHeatKabcoFilter();
+    if (timeFilter) filters.push(timeFilter);
 
-    const combined = timeFilter
-      ? ["all", kabcoFilter, timeFilter]
-      : kabcoFilter;
+    const mannerFilter = getMannerFilter();
+    if (mannerFilter) filters.push(mannerFilter);
 
+    const combined = filters.length === 1 ? filters[0] : ["all", ...filters];
     map.setFilter("crashes-heat", combined);
   }
 
