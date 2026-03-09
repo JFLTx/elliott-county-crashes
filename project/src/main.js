@@ -309,7 +309,7 @@ const map = new maplibregl.Map({
   center: [-85, 36],
   zoom: 5,
   maxPitch: 85,
-  style: "/style.json",
+  style: "./style.json",
 });
 
 map.on("load", async () => {
