@@ -5,7 +5,7 @@
   "sources": {
     "mask": {
       "type": "geojson",
-      "data": "/data/mask.geojson"
+      "data": "./data/mask.geojson"
     },
     "terrain-rgb": {
       "url": "https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=VR7FKTd6lXA4PKRQVzfY",
