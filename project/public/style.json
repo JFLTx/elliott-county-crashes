@@ -448,34 +448,6 @@
       }
     },
     {
-      "id": "Boundary-admin",
-      "type": "line",
-      "source": "maptiler_planet",
-      "source-layer": "boundary",
-      "minzoom": 4,
-      "layout": {
-        "visibility": "visible",
-        "line-join": "round"
-      },
-      "paint": {
-        "line-color": "#b8bec5",
-        "line-dasharray": [3, 2],
-        "line-width": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          4,
-          0.4,
-          8,
-          0.8,
-          12,
-          1.2
-        ],
-        "line-opacity": 0.7
-      }
-    },
-
-    {
       "id": "River-labels",
       "type": "symbol",
       "source": "maptiler_planet",
